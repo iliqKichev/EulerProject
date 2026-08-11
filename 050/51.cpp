@@ -1,92 +1,79 @@
 #include <algorithm>
-#include<iostream>
-#include<vector>
-using namespace std;
+#include <iostream>
+#include <string>
+#include <unordered_set>
 
-bool is_prime(int number){
-    if(number % 2 == 0 && number > 2){
-        return false;
+bool is_i_in(long long num, int i){
+  long long tmp = num;
+  while(tmp > 0){
+    if(tmp % 10 == i){
+      return true;
     }
-    for(int i=3; i*i <= number; i+=2){
-        if(number % i == 0){
-            return false;
-        }
-    }
-    return true;
+    tmp /= 10;
+  }
+  return false;
 }
 
-bool is_in(vector<int> primes, int number){
-    int lower_bound = 2;
-    int upper_bound = primes.size();
-    int middle;
-    while(lower_bound != upper_bound - 1){
-        middle = (upper_bound - lower_bound)/2 + lower_bound;
-        if (primes[middle] > number){
-            upper_bound = middle;
-        }
-        if (primes[middle] <= number){
-            lower_bound = middle;
-        }
-    }
-    return primes[lower_bound] == number;
+int sub(long long num, int i, std::unordered_set<long long> &primes) {
+  if (!is_i_in(num, i)) return -1;
+  
+  int fam_size = 0;
+  for (int j = 0; j < 10; j++) {
+    std::string n = std::to_string(num);
+    std::replace(n.begin(), n.end(), '0' + i, '0' + j);
+    fam_size += primes.find(std::stoll(n)) != primes.end();
+  }
+  return fam_size;
 }
 
-std::vector<int> get_family(int number){
-    short digit[10] = {0};
-    int tmp = number;
-    while(tmp > 0){
-        digit[tmp%10] ++;
-        tmp /= 10;
+int main() {
+  std::unordered_set<long long> primes_lb = {2}, primes;
+  long long ub = 1000001;
+  long long lb = 100001;
+  for (long long i = 3; i < lb; i += 2) {
+    bool flag = true;
+    for (auto p : primes_lb) {
+      if (i % p == 0) {
+        flag = false;
+        break;
+      }
     }
-
-}
-
-int main(){
-    int lowest_digit = 0;
-    vector<int> primes;
-    vector<int> prime_families[1<<6];
-    int lower_bound=100000, upper_bound=lower_bound*10;
-    cout << "Generating all primes from " << lower_bound << " up to " << upper_bound << "\n";
-//    for(int i=lower_bound/10; i < upper_bound/10; i++){
-//        int tmp[] = {i*10 + 1, i*10 + 3, i*10 + 7, i*10 + 9};
-//        for(int p: tmp){
-//            if(is_prime(p)){
-//                int tmp = p;
-//                int digits[10] = {0,0,0,0,0,0,0,0,0,0};
-//                while(tmp > 0){
-//                    digits[tmp%10] ++;
-//                    tmp /= 10;
-//                }
-//                if(digits[0] > 1 || digits[1] > 1 ||
-//                   digits[2] > 1 || digits[3] > 1 ||
-//                   digits[4] > 1 || digits[5] > 1 ||
-//                   digits[6] > 1 || digits[7] > 1 ||
-//                   digits[8] > 1 || digits[9] > 1 ){
-//                    primes.push_back(p);
-//                }
-//                if(digits[0] > 1 || digits[1] > 1 ||
-//                   digits[2] > 1 ){
-//                    potential.push_back(p);
-//                }
-//            }
-//        }
-//    }
-    for(int i = lower_bound; i < upper_bound; i ++){
-        
+    if (flag) {
+      primes_lb.insert(i);
     }
-    cout << "Evaluating potential candidates: " << potential.size() << "\n";
-    cout << "Total primes with repeating digits: " << primes.size() << "\n";
-    for(int p: primes){cout << p << " ";} cout << endl;
-//    for(int p: potential){
-//        int counter = 0;
-//        for(int i = 0; i < 10; i ++){
-//            if(is_in(primes, replace(p, lowest_digit, i))){
-//                counter ++;
-//            }
-//        }
-//        if(counter == 8){
-//            cout << p << " " << counter << endl;
-//        }
-//    }
-    return 0;
+  }
+
+  for (long long i = lb; i < ub; i += 2) {
+    bool flag = true;
+    for (auto p : primes_lb) {
+      if (i % p == 0) {
+        flag = false;
+        break;
+      }
+    }
+    if (flag) {
+      for (auto p : primes) {
+        if (i % p == 0) {
+          flag = false;
+          break;
+        }
+      }
+    }
+    if (flag) {
+      primes.insert(i);
+    }
+  }
+  long long min_num_fam_size8 = ub;
+  for (auto p : primes) {
+    int max_fam_size = -1;
+    for (int i = 0; i < 10; i++) {
+      max_fam_size = std::max(max_fam_size, sub(p, i, primes));
+    }
+    if (max_fam_size == 8){
+      min_num_fam_size8 = std::min(min_num_fam_size8, p);
+      // std::cout << max_fam_size << " " << p << std::endl;
+      }
+  }
+  std::cout << min_num_fam_size8 << std::endl;
+  return 0;
 }
